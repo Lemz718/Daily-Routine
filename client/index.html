@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Routine Manager</title>
+    <title>Daily-Routine</title>
     <style>
         :root {
             --primary: #4A90E2;
@@ -80,12 +80,10 @@
 
     <div class="content">
 
-        <!-- TASKS VIEW -->
         <div id="tasks-view">
             <div id="taskList"></div>
         </div>
 
-        <!-- CALENDAR VIEW -->
         <div id="calendar-view" class="hidden">
             <div class="calendar-grid-header">
                 <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
@@ -97,7 +95,6 @@
             </div>
         </div>
 
-        <!-- MINE / PROFILE VIEW -->
         <div id="mine-view" class="hidden">
             <div class="profile-card">
                 <div class="avatar-large" onclick="triggerAvatarUpload()" style="cursor: pointer;">
@@ -163,7 +160,6 @@
     </div>
 </div>
 
-<!-- TASK MODAL -->
 <div id="taskModal" class="modal">
     <div class="modal-content">
         <h3>New Task</h3>
@@ -183,7 +179,6 @@
     </div>
 </div>
 
-<!-- LOGIN MODAL -->
 <div id="loginModal" class="modal">
     <div class="modal-content">
         <h3 style="text-align: center; color: #4A90E2;">Login</h3>
@@ -203,7 +198,6 @@
     </div>
 </div>
 
-<!-- SIDEBAR -->
 <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
 <div id="sidebar-menu" class="sidebar">
     <div class="sidebar-header">
@@ -219,9 +213,8 @@
 </div>
 
 <script>
-    const API_URL = ''; // Relative - NestJS serves this HTML
+    const API_URL = '';
 
-    // ─── MODALS ──────────────────────────────────────────────────────────────
     function openModal() {
         document.getElementById('taskModal').style.display = 'flex';
         document.getElementById('new_task_date').value = new Date().toISOString().split('T')[0];
@@ -237,7 +230,6 @@
         document.getElementById('loginModal').style.display = 'none';
     }
 
-    // ─── TABS ────────────────────────────────────────────────────────────────
     function switchTab(tabId, title, element) {
         const content = document.querySelector('.content');
         content.style.opacity = '0';
@@ -258,7 +250,6 @@
         }, 150);
     }
 
-    // ─── SIDEBAR ─────────────────────────────────────────────────────────────
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar-menu');
         const overlay = document.getElementById('sidebar-overlay');
@@ -266,7 +257,6 @@
         overlay.style.display = sidebar.classList.contains('active') ? 'block' : 'none';
     }
 
-    // ─── DARK MODE ───────────────────────────────────────────────────────────
     function toggleDarkMode() {
         const isDark = document.body.getAttribute('data-dark') === 'true';
         const container = document.querySelector('.mobile-container');
@@ -289,7 +279,6 @@
         toggleSidebar();
     }
 
-    // ─── AVATAR ──────────────────────────────────────────────────────────────
     function triggerAvatarUpload() {
         document.getElementById('avatar-upload').click();
     }
@@ -312,7 +301,6 @@
         display.innerHTML = `<img src="${imageData}" style="width:60px;height:60px;object-fit:cover;border-radius:50%;">`;
     }
 
-    // ─── AUTH ─────────────────────────────────────────────────────────────────
     async function handleLogin() {
         const user = document.getElementById('login_username').value.trim();
         const pass = document.getElementById('login_password').value;
@@ -338,7 +326,6 @@
         }
     }
 
-    // ─── RENDER TASKS ────────────────────────────────────────────────────────
     function renderTasksList(tasks) {
         const container = document.getElementById('taskList');
         if (tasks.length === 0) {
@@ -365,7 +352,6 @@
         });
     }
 
-    // ─── LOAD TASKS ──────────────────────────────────────────────────────────
     async function loadTasks() {
         try {
             const user = localStorage.getItem('currentUser') || 'guest';
@@ -381,7 +367,6 @@
         }
     }
 
-    // ─── SAVE TASK ───────────────────────────────────────────────────────────
     async function saveTask() {
         const name = document.getElementById('new_task_name').value.trim();
         if (!name) return alert("Task name required");
@@ -407,7 +392,6 @@
         }
     }
 
-    // ─── TOGGLE TASK ─────────────────────────────────────────────────────────
     async function toggleTask(id, checkboxElement) {
         const isChecked = checkboxElement.checked;
         const taskCard = checkboxElement.closest('.task-card');
@@ -425,7 +409,6 @@
         }
     }
 
-    // ─── DELETE TASK ─────────────────────────────────────────────────────────
     async function deleteTask(id) {
         if (confirm("Are you sure you want to delete this task?")) {
             try {
@@ -438,7 +421,6 @@
         }
     }
 
-    // ─── TOGGLE STAR ─────────────────────────────────────────────────────────
     async function toggleStar(id) {
         try {
             const res = await fetch(`${API_URL}/star/${id}`, { method: 'PATCH' });
@@ -448,7 +430,6 @@
         }
     }
 
-    // ─── FILTER / STARRED ────────────────────────────────────────────────────
     async function filterByCategory() {
         const category = prompt("Enter category (Personal, Work, Wishlist):");
         if (!category) return;
@@ -473,7 +454,6 @@
         renderTasksList(tasks.filter(t => t.isStarred === true || t.isStarred == 1));
     }
 
-    // ─── STATS ───────────────────────────────────────────────────────────────
     async function updateStats() {
         try {
             const user = localStorage.getItem('currentUser') || 'guest';
@@ -509,7 +489,6 @@
         window.requestAnimationFrame(step);
     }
 
-    // ─── CALENDAR ────────────────────────────────────────────────────────────
     async function generateCalendar() {
         const container = document.getElementById('calendar-days');
         container.innerHTML = '';
@@ -518,7 +497,7 @@
             const user = localStorage.getItem('currentUser') || 'guest';
             const res = await fetch(`${API_URL}/display?username=${user}`);
             if (res.ok) tasks = await res.json();
-        } catch (e) { /* silently fail */ }
+        } catch (e) {  }
 
         const today = new Date().getDate();
         for (let i = 1; i <= 28; i++) {
@@ -551,9 +530,7 @@
         });
     }
 
-    // ─── INIT ─────────────────────────────────────────────────────────────────
     window.onload = () => {
-        // Handle Google OAuth redirect
         const urlParams = new URLSearchParams(window.location.search);
         const googleUser = urlParams.get('username');
         if (googleUser) {
@@ -561,7 +538,6 @@
             window.history.replaceState({}, document.title, "/");
         }
 
-        // Set up profile section
         const user = localStorage.getItem('currentUser');
         if (user) {
             const statusText = document.getElementById('user-status-text');
@@ -580,7 +556,6 @@
             }
         }
 
-        // Restore avatar
         const savedAvatar = localStorage.getItem('userAvatar');
         if (savedAvatar) updateAvatarDisplay(savedAvatar);
 
