@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Routine Manager</title>
+    <style>
+        :root {
+            --primary: #4A90E2;
+            --bg: #f8fbff;
+            --card: #ffffff;
+            --text: #333;
+        }
+        body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #e0e7ff; margin: 0; display: flex; justify-content: center; }
+        .mobile-container { width: 100%; max-width: 400px; height: 100vh; background: var(--bg); position: relative; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .header { padding: 20px; background: var(--card); text-align: center; border-bottom: 1px solid #eee; position: relative; }
+        .content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 80px; transition: opacity 0.3s; }
+        
+        .nav-bar { position: absolute; bottom: 0; width: 100%; height: 70px; background: var(--card); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #eee; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 12px; cursor: pointer; color: #888; }
+        .nav-item.active { color: var(--primary); font-weight: bold; }
+        .nav-item span { margin-top: 4px; }
+
+        .task-card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid #f0f4f8; transition: transform 0.2s; }
+        .task-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .completed-text { text-decoration: line-through; opacity: 0.6; }
+        
+        .fab { position: absolute; bottom: 90px; right: 20px; width: 56px; height: 56px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4); cursor: pointer; z-index: 10; transition: 0.2s; }
+        .fab:hover { transform: scale(1.1); background: #357ABD; }
+
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 3000; }
+        .modal-content { background: white; padding: 25px; border-radius: 20px; width: 80%; max-width: 320px; }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-save { flex: 1; background: var(--primary); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; }
+        .btn-cancel { flex: 1; background: #eee; border: none; padding: 10px; border-radius: 8px; cursor: pointer; }
+        .hidden { display: none !important; }
+        
+        .stat-item { background: #f0f7ff; padding: 20px; border-radius: 12px; text-align: center; }
+        .stat-number { font-size: 24px; font-weight: bold; display: block; color: #333; }
+        .stat-label { font-size: 12px; color: #666; }
+
+        .star-btn { cursor: pointer; transition: 0.3s; color: #ccc; font-size: 20px; }
+        .star-btn.is-starred { color: #FFD700; transform: scale(1.2) rotate(15deg); text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+
+        .calendar-grid-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; color: #555; margin-bottom: 15px; font-size: 14px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+        .calendar-day { padding: 10px 0; font-size: 14px; cursor: pointer; border-radius: 8px; transition: 0.2s; }
+        .calendar-day:hover { background: #f0f7ff; }
+        .today-highlight { background: var(--primary); color: white; }
+        .has-task-dot::after { content: '•'; display: block; color: var(--primary); margin-top: -5px; }
+
+        .sidebar { position: absolute; left: -250px; top: 0; width: 250px; height: 100%; background: white; z-index: 2000; transition: 0.3s; box-sizing: border-box; }
+        .sidebar.active { left: 0; }
+        .sidebar-overlay { position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 1500; }
+        .sidebar-header { padding: 30px 20px; background: linear-gradient(135deg, #4A90E2, #63a4ff); color: white; }
+        .sidebar-items { padding: 10px; }
+        .sidebar-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 10px; }
+        .sidebar-item:hover { background: #f0f7ff; color: #4A90E2; }
+
+        .profile-card { background: var(--card); padding: 20px; border-radius: 15px; display: flex; align-items: center; gap: 15px; }
+        .avatar-large { width: 60px; height: 60px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: relative; }
+        .login-link { color: #4A90E2; cursor: pointer; font-size: 14px; }
+        .google-btn { width: 100%; padding: 12px; margin-top: 10px; background-color: white; color: #757575; border: 1px solid #dadce0; border-radius: 4px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; text-decoration: none; box-sizing: border-box; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: #4A90E2; }
+    </style>
+</head>
+<body>
+
+<div class="mobile-container">
+    <div class="header">
+        <div style="position: absolute; left: 20px; font-size: 24px; cursor: pointer; top: 20px;" onclick="toggleSidebar()">☰</div>
+        <h2 id="view-title" style="margin:0;">My Tasks</h2>
+    </div>
+
+    <div class="content">
+
+        <!-- TASKS VIEW -->
+        <div id="tasks-view">
+            <div id="taskList"></div>
+        </div>
+
+        <!-- CALENDAR VIEW -->
+        <div id="calendar-view" class="hidden">
+            <div class="calendar-grid-header">
+                <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
+            <div id="calendar-days" class="calendar-grid"></div>
+            <div id="day-tasks-container" style="margin-top: 30px;">
+                <h4 id="selected-date-label" style="color: #4A90E2; border-bottom: 2px solid #f0f4f8; padding-bottom: 5px;">Today's Focus</h4>
+                <div id="day-task-list"></div>
+            </div>
+        </div>
+
+        <!-- MINE / PROFILE VIEW -->
+        <div id="mine-view" class="hidden">
+            <div class="profile-card">
+                <div class="avatar-large" onclick="triggerAvatarUpload()" style="cursor: pointer;">
+                    <span id="current-avatar-display" style="font-size: 30px;">👤</span>
+                    <div style="position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.5); color: white; font-size: 10px; text-align: center; padding: 2px;">EDIT</div>
+                </div>
+                <input type="file" id="avatar-upload" hidden accept="image/*" onchange="handleAvatarChange(this)">
+                <div>
+                    <div id="user-status-text" style="font-weight: bold; font-size: 16px;">Welcome!</div>
+                    <div class="login-link" id="login-link-btn" onclick="openLoginModal()">Click to login</div>
+                </div>
+            </div>
+
+            <h4 style="margin: 20px 0 10px 0; color: #555;">Tasks Overview</h4>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div class="stat-item">
+                    <span id="count-comp" class="stat-number">0</span>
+                    <span class="stat-label">Completed</span>
+                </div>
+                <div class="stat-item">
+                    <span id="count-pend" class="stat-number">0</span>
+                    <span class="stat-label">Pending</span>
+                </div>
+            </div>
+
+            <div class="stat-item" style="display: flex; flex-direction: column; align-items: center; padding: 25px; margin-bottom: 20px;">
+                <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+                    <svg width="100" height="100" style="transform: rotate(-90deg);">
+                        <circle cx="50" cy="50" r="40" stroke="#eee" stroke-width="8" fill="transparent"/>
+                        <circle id="progress-circle" cx="50" cy="50" r="40" stroke="#4A90E2" stroke-width="8"
+                            fill="transparent" stroke-dasharray="251.2" stroke-dashoffset="251.2"
+                            stroke-linecap="round" style="transition: stroke-dashoffset 0.5s ease;"/>
+                    </svg>
+                    <div id="perc-text" style="position: absolute; font-size: 18px; font-weight: bold; color: #4A90E2;">0%</div>
+                </div>
+                <span class="stat-label" style="margin-top: 10px;">Total Completion Rate</span>
+            </div>
+
+            <h4 style="margin: 20px 0 10px 0; color: #555;">Completion of Daily Tasks</h4>
+            <div style="background: #f0f7ff; padding: 20px; border-radius: 12px; height: 100px; display: flex; align-items: flex-end; justify-content: space-around; gap: 5px;">
+                <div style="width:15px;height:20%;background:#4A90E2;border-radius:3px;"></div>
+                <div style="width:15px;height:45%;background:#4A90E2;border-radius:3px;"></div>
+                <div style="width:15px;height:10%;background:#4A90E2;border-radius:3px;"></div>
+                <div style="width:15px;height:80%;background:#4A90E2;border-radius:3px;"></div>
+                <div style="width:15px;height:35%;background:#4A90E2;border-radius:3px;"></div>
+                <div style="width:15px;height:60%;background:#4A90E2;border-radius:3px;"></div>
+                <div style="width:15px;height:15%;background:#4A90E2;border-radius:3px;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-around; padding: 5px 0; font-size: 10px; color: #888;">
+                <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="fab" onclick="openModal()">+</div>
+
+    <div class="nav-bar">
+        <div class="nav-item active" onclick="switchTab('tasks', 'My Tasks', this)">📋<span>Tasks</span></div>
+        <div class="nav-item" onclick="switchTab('calendar', 'February 2026', this)">📅<span>Calendar</span></div>
+        <div class="nav-item" onclick="switchTab('mine', 'Profile', this)">👤<span>Mine</span></div>
+    </div>
+</div>
+
+<!-- TASK MODAL -->
+<div id="taskModal" class="modal">
+    <div class="modal-content">
+        <h3>New Task</h3>
+        <input type="text" id="new_task_name" placeholder="What needs to be done?">
+        <label><small>Category</small></label>
+        <select id="new_task_category">
+            <option value="Personal">Personal</option>
+            <option value="Work">Work</option>
+            <option value="Wishlist">Wishlist</option>
+        </select>
+        <label><small>Due Date</small></label>
+        <input type="date" id="new_task_date">
+        <div class="modal-buttons">
+            <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+            <button class="btn-save" onclick="saveTask()">Save Task</button>
+        </div>
+    </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div id="loginModal" class="modal">
+    <div class="modal-content">
+        <h3 style="text-align: center; color: #4A90E2;">Login</h3>
+        <input type="text" id="login_username" placeholder="Username">
+        <input type="password" id="login_password" placeholder="Password">
+        <div class="modal-buttons">
+            <button class="btn-cancel" onclick="closeLoginModal()">Cancel</button>
+            <button class="btn-save" onclick="handleLogin()">Login</button>
+        </div>
+        <div style="text-align: center; margin-top: 15px;">
+            <p style="color: #888; font-size: 12px; margin-bottom: 10px;">OR</p>
+            <a href="/auth/google" class="google-btn">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width:18px;height:18px;">
+                Sign in with Google
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- SIDEBAR -->
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+<div id="sidebar-menu" class="sidebar">
+    <div class="sidebar-header">
+        <h3 style="margin:0">To-Do List</h3>
+        <small>v1.0</small>
+    </div>
+    <div class="sidebar-items">
+        <div class="sidebar-item" onclick="loadStarredOnly()"><span style="width:25px">⭐</span> Starred Tasks</div>
+        <div class="sidebar-item" onclick="filterByCategory()"><span style="width:25px">📁</span> Category</div>
+        <div class="sidebar-item" onclick="toggleDarkMode()"><span style="width:25px">🎨</span> Theme (Dark Mode)</div>
+        <div class="sidebar-item" onclick="alert('Widgets coming in v2.0!')"><span style="width:25px">🧩</span> Widget</div>
+    </div>
+</div>
+
+<script>
+    const API_URL = ''; // Relative - NestJS serves this HTML
+
+    // ─── MODALS ──────────────────────────────────────────────────────────────
+    function openModal() {
+        document.getElementById('taskModal').style.display = 'flex';
+        document.getElementById('new_task_date').value = new Date().toISOString().split('T')[0];
+    }
+    function closeModal() {
+        document.getElementById('taskModal').style.display = 'none';
+        document.getElementById('new_task_name').value = '';
+    }
+    function openLoginModal() {
+        document.getElementById('loginModal').style.display = 'flex';
+    }
+    function closeLoginModal() {
+        document.getElementById('loginModal').style.display = 'none';
+    }
+
+    // ─── TABS ────────────────────────────────────────────────────────────────
+    function switchTab(tabId, title, element) {
+        const content = document.querySelector('.content');
+        content.style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('view-title').innerText = title;
+            ['tasks-view', 'calendar-view', 'mine-view'].forEach(id =>
+                document.getElementById(id).classList.add('hidden')
+            );
+            document.getElementById(tabId + '-view').classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            element.classList.add('active');
+
+            if (tabId === 'calendar') generateCalendar();
+            if (tabId === 'mine') updateStats();
+            if (tabId === 'tasks') loadTasks();
+
+            content.style.opacity = '1';
+        }, 150);
+    }
+
+    // ─── SIDEBAR ─────────────────────────────────────────────────────────────
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar-menu');
+        const overlay = document.getElementById('sidebar-overlay');
+        sidebar.classList.toggle('active');
+        overlay.style.display = sidebar.classList.contains('active') ? 'block' : 'none';
+    }
+
+    // ─── DARK MODE ───────────────────────────────────────────────────────────
+    function toggleDarkMode() {
+        const isDark = document.body.getAttribute('data-dark') === 'true';
+        const container = document.querySelector('.mobile-container');
+        const navBar = document.querySelector('.nav-bar');
+        if (!isDark) {
+            document.body.setAttribute('data-dark', 'true');
+            document.body.style.backgroundColor = '#1e1e1e';
+            container.style.background = '#2d2d2d';
+            container.style.color = 'white';
+            navBar.style.background = '#2d2d2d';
+            navBar.style.borderTop = '1px solid #444';
+        } else {
+            document.body.setAttribute('data-dark', 'false');
+            document.body.style.backgroundColor = '#e0e7ff';
+            container.style.background = 'var(--bg)';
+            container.style.color = 'var(--text)';
+            navBar.style.background = '#fff';
+            navBar.style.borderTop = '1px solid #eee';
+        }
+        toggleSidebar();
+    }
+
+    // ─── AVATAR ──────────────────────────────────────────────────────────────
+    function triggerAvatarUpload() {
+        document.getElementById('avatar-upload').click();
+    }
+    function handleAvatarChange(input) {
+        if (input.files && input.files[0]) {
+            if (input.files[0].size > 2 * 1024 * 1024) {
+                alert("File too large! Max 2MB.");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                localStorage.setItem('userAvatar', e.target.result);
+                updateAvatarDisplay(e.target.result);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+    function updateAvatarDisplay(imageData) {
+        const display = document.getElementById('current-avatar-display');
+        display.innerHTML = `<img src="${imageData}" style="width:60px;height:60px;object-fit:cover;border-radius:50%;">`;
+    }
+
+    // ─── AUTH ─────────────────────────────────────────────────────────────────
+    async function handleLogin() {
+        const user = document.getElementById('login_username').value.trim();
+        const pass = document.getElementById('login_password').value;
+        if (!user) return alert("Please enter a username");
+        if (!pass) return alert("Please enter a password");
+        if (pass.length < 8) return alert("Password must be at least 8 characters long");
+        
+        try {
+            const res = await fetch(`${API_URL}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, password: pass })
+            });
+            if (res.ok) {
+                localStorage.setItem('currentUser', user);
+                closeLoginModal();
+                location.reload();
+            } else {
+                alert("Login failed. Check your credentials.");
+            }
+        } catch (e) {
+            alert("Login failed. Make sure backend is running.");
+        }
+    }
+
+    // ─── RENDER TASKS ────────────────────────────────────────────────────────
+    function renderTasksList(tasks) {
+        const container = document.getElementById('taskList');
+        if (tasks.length === 0) {
+            container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#aaa;">
+                <div style="font-size:50px;">📋</div>
+                <p>No tasks yet. Click + to add one!</p>
+            </div>`;
+            return;
+        }
+        container.innerHTML = '';
+        tasks.forEach(task => {
+            const isDone = task.isCompleted ? 'completed-text' : '';
+            const starredClass = (task.isStarred === true || task.isStarred == 1) ? 'is-starred' : '';
+            container.innerHTML += `
+                <div class="task-card" data-id="${task.id}">
+                    <input type="checkbox" ${task.isCompleted ? 'checked' : ''} onchange="toggleTask(${task.id}, this)">
+                    <div class="${isDone}" style="flex:1">
+                        <strong>${task.task_name}</strong><br>
+                        <small style="color:#888">🏷️ ${task.category} | 📅 ${task.date || 'No Date'}</small>
+                    </div>
+                    <span onclick="toggleStar(${task.id})" class="star-btn ${starredClass}">⭐</span>
+                    <span onclick="deleteTask(${task.id})" style="color:#ff4d4d;cursor:pointer;font-weight:bold;padding:5px;">✕</span>
+                </div>`;
+        });
+    }
+
+    // ─── LOAD TASKS ──────────────────────────────────────────────────────────
+    async function loadTasks() {
+        try {
+            const user = localStorage.getItem('currentUser') || 'guest';
+            const res = await fetch(`${API_URL}/display?username=${user}`);
+            if (!res.ok) throw new Error('Server error');
+            renderTasksList(await res.json());
+        } catch (e) {
+            document.getElementById('taskList').innerHTML = `
+                <div style="text-align:center;padding:40px;color:#aaa;">
+                    <div style="font-size:40px;">⚠️</div>
+                    <p>Could not connect to server.</p>
+                </div>`;
+        }
+    }
+
+    // ─── SAVE TASK ───────────────────────────────────────────────────────────
+    async function saveTask() {
+        const name = document.getElementById('new_task_name').value.trim();
+        if (!name) return alert("Task name required");
+        const user = localStorage.getItem('currentUser') || 'guest';
+        try {
+            const res = await fetch(`${API_URL}/add`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    task_name: name,
+                    username: user,
+                    category: document.getElementById('new_task_category').value,
+                    date: document.getElementById('new_task_date').value,
+                    isCompleted: false,
+                    isStarred: false
+                })
+            });
+            if (!res.ok) throw new Error('Failed');
+            closeModal();
+            loadTasks();
+        } catch (e) {
+            alert("Failed to save task. Check your backend.");
+        }
+    }
+
+    // ─── TOGGLE TASK ─────────────────────────────────────────────────────────
+    async function toggleTask(id, checkboxElement) {
+        const isChecked = checkboxElement.checked;
+        const taskCard = checkboxElement.closest('.task-card');
+        const textDiv = taskCard.querySelector('div');
+        if (isChecked) textDiv.classList.add('completed-text');
+        else textDiv.classList.remove('completed-text');
+        try {
+            await fetch(`${API_URL}/toggle/${id}`, { method: 'PATCH' });
+            updateStats();
+        } catch (error) {
+            checkboxElement.checked = !isChecked;
+            if (isChecked) textDiv.classList.remove('completed-text');
+            else textDiv.classList.add('completed-text');
+            alert("Could not save change. Check your backend.");
+        }
+    }
+
+    // ─── DELETE TASK ─────────────────────────────────────────────────────────
+    async function deleteTask(id) {
+        if (confirm("Are you sure you want to delete this task?")) {
+            try {
+                await fetch(`${API_URL}/delete/${id}`, { method: 'DELETE' });
+                loadTasks();
+                updateStats();
+            } catch (e) {
+                alert("Failed to delete task.");
+            }
+        }
+    }
+
+    // ─── TOGGLE STAR ─────────────────────────────────────────────────────────
+    async function toggleStar(id) {
+        try {
+            const res = await fetch(`${API_URL}/star/${id}`, { method: 'PATCH' });
+            if (res.ok) loadTasks();
+        } catch (e) {
+            console.error("Failed to toggle star");
+        }
+    }
+
+    // ─── FILTER / STARRED ────────────────────────────────────────────────────
+    async function filterByCategory() {
+        const category = prompt("Enter category (Personal, Work, Wishlist):");
+        if (!category) return;
+        toggleSidebar();
+        document.getElementById('view-title').innerText = category + " Tasks";
+        ['tasks-view', 'calendar-view', 'mine-view'].forEach(id => document.getElementById(id).classList.add('hidden'));
+        document.getElementById('tasks-view').classList.remove('hidden');
+        const user = localStorage.getItem('currentUser') || 'guest';
+        const res = await fetch(`${API_URL}/display?username=${user}`);
+        const tasks = await res.json();
+        renderTasksList(tasks.filter(t => t.category.toLowerCase() === category.toLowerCase()));
+    }
+
+    async function loadStarredOnly() {
+        toggleSidebar();
+        document.getElementById('view-title').innerText = "Starred Tasks";
+        ['tasks-view', 'calendar-view', 'mine-view'].forEach(id => document.getElementById(id).classList.add('hidden'));
+        document.getElementById('tasks-view').classList.remove('hidden');
+        const user = localStorage.getItem('currentUser') || 'guest';
+        const res = await fetch(`${API_URL}/display?username=${user}`);
+        const tasks = await res.json();
+        renderTasksList(tasks.filter(t => t.isStarred === true || t.isStarred == 1));
+    }
+
+    // ─── STATS ───────────────────────────────────────────────────────────────
+    async function updateStats() {
+        try {
+            const user = localStorage.getItem('currentUser') || 'guest';
+            const res = await fetch(`${API_URL}/display?username=${user}`);
+            if (!res.ok) return;
+            const tasks = await res.json();
+            const total = tasks.length;
+            const completed = tasks.filter(t => t.isCompleted).length;
+            const pending = total - completed;
+            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            animateNumber('count-comp', completed);
+            animateNumber('count-pend', pending);
+            animateNumber('perc-text', percentage, '%');
+
+            const circle = document.getElementById('progress-circle');
+            if (circle) circle.style.strokeDashoffset = 251.2 - (percentage / 100) * 251.2;
+        } catch (e) {
+            console.error("Stats update failed:", e);
+        }
+    }
+
+    function animateNumber(id, endValue, suffix = "") {
+        const obj = document.getElementById(id);
+        if (!obj) return;
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / 500, 1);
+            obj.innerHTML = Math.floor(progress * endValue) + suffix;
+            if (progress < 1) window.requestAnimationFrame(step);
+        };
+        window.requestAnimationFrame(step);
+    }
+
+    // ─── CALENDAR ────────────────────────────────────────────────────────────
+    async function generateCalendar() {
+        const container = document.getElementById('calendar-days');
+        container.innerHTML = '';
+        let tasks = [];
+        try {
+            const user = localStorage.getItem('currentUser') || 'guest';
+            const res = await fetch(`${API_URL}/display?username=${user}`);
+            if (res.ok) tasks = await res.json();
+        } catch (e) { /* silently fail */ }
+
+        const today = new Date().getDate();
+        for (let i = 1; i <= 28; i++) {
+            const dayEl = document.createElement('div');
+            dayEl.classList.add('calendar-day');
+            dayEl.innerText = i;
+            if (i === today) dayEl.classList.add('today-highlight');
+            const dateString = `2026-02-${i.toString().padStart(2, '0')}`;
+            if (tasks.some(t => t.date === dateString)) dayEl.classList.add('has-task-dot');
+            dayEl.onclick = () => showTasksForDay(dateString, tasks);
+            container.appendChild(dayEl);
+        }
+    }
+
+    function showTasksForDay(dateStr, allTasks) {
+        const list = document.getElementById('day-task-list');
+        const label = document.getElementById('selected-date-label');
+        list.innerHTML = '';
+        label.innerText = `Tasks for ${dateStr}`;
+        const filtered = allTasks.filter(t => t.date === dateStr);
+        if (filtered.length === 0) {
+            list.innerHTML = `<p style="color:#999;font-size:0.9em;">No tasks for this day.</p>`;
+            return;
+        }
+        filtered.forEach(t => {
+            list.innerHTML += `
+                <div style="background:#f9f9f9;padding:10px;border-radius:10px;margin-bottom:5px;border-left:4px solid #4A90E2">
+                    <strong>${t.task_name}</strong> <small style="color:#888">(${t.category})</small>
+                </div>`;
+        });
+    }
+
+    // ─── INIT ─────────────────────────────────────────────────────────────────
+    window.onload = () => {
+        // Handle Google OAuth redirect
+        const urlParams = new URLSearchParams(window.location.search);
+        const googleUser = urlParams.get('username');
+        if (googleUser) {
+            localStorage.setItem('currentUser', googleUser);
+            window.history.replaceState({}, document.title, "/");
+        }
+
+        // Set up profile section
+        const user = localStorage.getItem('currentUser');
+        if (user) {
+            const statusText = document.getElementById('user-status-text');
+            const loginBtn = document.getElementById('login-link-btn');
+            if (statusText) statusText.innerText = `Great job, ${user}!`;
+            if (loginBtn) {
+                loginBtn.innerText = "Logout";
+                loginBtn.style.color = "#ff4d4d";
+                loginBtn.onclick = () => {
+                    if (confirm("Are you sure you want to logout?")) {
+                        localStorage.removeItem('currentUser');
+                        localStorage.removeItem('userAvatar');
+                        location.reload();
+                    }
+                };
+            }
+        }
+
+        // Restore avatar
+        const savedAvatar = localStorage.getItem('userAvatar');
+        if (savedAvatar) updateAvatarDisplay(savedAvatar);
+
+        loadTasks();
+        generateCalendar();
+        updateStats();
+    };
+</script>
+
+</body>
+</html>
