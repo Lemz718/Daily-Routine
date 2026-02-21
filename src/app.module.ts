@@ -15,9 +15,14 @@ import { Task } from './task.entity';
     }),
     TypeOrmModule.forRoot({
       type: 'mysql',
-      url: process.env.MYSQL_URL,
-      autoLoadEntities: true,
-      synchronize: true,
+    url: process.env.MYSQL_URL, 
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '4306', 10),
+    username: process.env.DB_USERNAME || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_DATABASE || 'hello',
+    autoLoadEntities: true,
+    synchronize: true,
     }),
     TypeOrmModule.forFeature([Task]),
     ServeStaticModule.forRoot({

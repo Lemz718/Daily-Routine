@@ -61,13 +61,20 @@
         .profile-card { background: var(--card); padding: 20px; border-radius: 15px; display: flex; align-items: center; gap: 15px; }
         .avatar-large { width: 60px; height: 60px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: relative; }
         .login-link { color: #4A90E2; cursor: pointer; font-size: 14px; }
-        .google-btn { width: 100%; padding: 12px; margin-top: 10px; background-color: white; color: #757575; border: 1px solid #dadce0; border-radius: 4px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; text-decoration: none; box-sizing: border-box; }
+        .google-btn { width: 100%; padding: 12px; margin-top: 10px; background-color: white; color: #757575; border: 1px solid #dadce0; border-radius: 4px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; text-decoration: none; box-sizing: border-box; transition: all 0.3s ease; }
+        .google-btn:hover { background-color: #4A90E2; color: white; border-color: #4A90E2; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3); }
+
+        .help-btn { position: absolute; top: 15px; right: 15px; padding: 8px 16px; background: #FFD700; color: #333; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: none; transition: 0.3s; z-index: 100; animation: pulse 2s infinite; }
+        .help-btn:hover { background: #ffcc00; transform: scale(1.05); }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 215, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); } }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
         input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: #4A90E2; }
+        
     </style>
 </head>
 <body>
@@ -181,20 +188,12 @@
 
 <div id="loginModal" class="modal">
     <div class="modal-content">
-        <h3 style="text-align: center; color: #4A90E2;">Login</h3>
-        <input type="text" id="login_username" placeholder="Username">
-        <input type="password" id="login_password" placeholder="Password">
-        <div class="modal-buttons">
-            <button class="btn-cancel" onclick="closeLoginModal()">Cancel</button>
-            <button class="btn-save" onclick="handleLogin()">Login</button>
-        </div>
-        <div style="text-align: center; margin-top: 15px;">
-            <p style="color: #888; font-size: 12px; margin-bottom: 10px;">OR</p>
-            <a href="/auth/google" class="google-btn">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width:18px;height:18px;">
-                Sign in with Google
-            </a>
-        </div>
+        <h3 style="text-align: center; color: #4A90E2;">Account Sync</h3>
+        <a href="/auth/google" class="google-btn">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width:18px;height:18px;">
+            Sign in with Google
+        </a>
+        <button class="btn-cancel" onclick="closeLoginModal()" style="width: 100%; margin-top: 15px;">Cancel</button>
     </div>
 </div>
 
@@ -212,8 +211,27 @@
     </div>
 </div>
 
+<div class="help-btn" onclick="toggleUserGuide()" title="User Guide">?</div>
+
+<div id="guideModal" class="modal">
+    <div class="modal-content">
+        <h3 style="color: var(--primary);">Quick User Guide</h3>
+        <ul style="text-align: left; font-size: 14px; line-height: 1.6;">
+            <li><strong>Add Tasks:</strong> Click the <b>+</b> button to create a new task.</li>
+            <li><strong>Prioritize:</strong> Use the ⭐ icon to mark important tasks.</li>
+            <li><strong>Sync:</strong> Use the 👤 <b>Mine</b> tab to log in with Google for cloud sync.</li>
+            <li><strong>Calendar:</strong> Tap 📅 to view deadlines for February 2026.</li>
+        </ul>
+        <button class="btn-save" onclick="toggleUserGuide()">Got it!</button>
+    </div>
+</div>
+
+
+
 <script>
-    const API_URL = '';
+    const API_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000' 
+    : 'https://daily-routine-production.up.railway.app';
 
     function openModal() {
         document.getElementById('taskModal').style.display = 'flex';
@@ -258,24 +276,7 @@
     }
 
     function toggleDarkMode() {
-        const isDark = document.body.getAttribute('data-dark') === 'true';
-        const container = document.querySelector('.mobile-container');
-        const navBar = document.querySelector('.nav-bar');
-        if (!isDark) {
-            document.body.setAttribute('data-dark', 'true');
-            document.body.style.backgroundColor = '#1e1e1e';
-            container.style.background = '#2d2d2d';
-            container.style.color = 'white';
-            navBar.style.background = '#2d2d2d';
-            navBar.style.borderTop = '1px solid #444';
-        } else {
-            document.body.setAttribute('data-dark', 'false');
-            document.body.style.backgroundColor = '#e0e7ff';
-            container.style.background = 'var(--bg)';
-            container.style.color = 'var(--text)';
-            navBar.style.background = '#fff';
-            navBar.style.borderTop = '1px solid #eee';
-        }
+        alert('Dark mode feature is under maintenance');
         toggleSidebar();
     }
 
@@ -301,30 +302,7 @@
         display.innerHTML = `<img src="${imageData}" style="width:60px;height:60px;object-fit:cover;border-radius:50%;">`;
     }
 
-    async function handleLogin() {
-        const user = document.getElementById('login_username').value.trim();
-        const pass = document.getElementById('login_password').value;
-        if (!user) return alert("Please enter a username");
-        if (!pass) return alert("Please enter a password");
-        if (pass.length < 8) return alert("Password must be at least 8 characters long");
-        
-        try {
-            const res = await fetch(`${API_URL}/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: user, password: pass })
-            });
-            if (res.ok) {
-                localStorage.setItem('currentUser', user);
-                closeLoginModal();
-                location.reload();
-            } else {
-                alert("Login failed. Check your credentials.");
-            }
-        } catch (e) {
-            alert("Login failed. Make sure backend is running.");
-        }
-    }
+    // handle log in na di gin delete ko
 
     function renderTasksList(tasks) {
         const container = document.getElementById('taskList');
@@ -528,6 +506,15 @@
                     <strong>${t.task_name}</strong> <small style="color:#888">(${t.category})</small>
                 </div>`;
         });
+    }
+
+    function toggleUserGuide() {
+        const modal = document.getElementById('guideModal');
+        if (modal.style.display === 'flex') {
+            modal.style.display = 'none';
+        } else {
+            modal.style.display = 'flex';
+        }
     }
 
     window.onload = () => {
