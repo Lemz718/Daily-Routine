@@ -74,7 +74,7 @@
         }
 
         input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: #4A90E2; }
-        
+
     </style>
 </head>
 <body>
@@ -176,6 +176,7 @@
             <option value="Personal">Personal</option>
             <option value="Work">Work</option>
             <option value="Wishlist">Wishlist</option>
+            <option value="Birthday">Birthday</option>
         </select>
         <label><small>Due Date</small></label>
         <input type="date" id="new_task_date">
@@ -409,7 +410,7 @@
     }
 
     async function filterByCategory() {
-        const category = prompt("Enter category (Personal, Work, Wishlist):");
+        const category = prompt("Enter category (Personal, Work, Wishlist, Birthday):");
         if (!category) return;
         toggleSidebar();
         document.getElementById('view-title').innerText = category + " Tasks";
