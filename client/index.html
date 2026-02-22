@@ -4,85 +4,211 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily-Routine</title>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script> 
+    <script>
+        (function() {
+            emailjs.init("VlJaZ1nveYq7yEHV3"); 
+        })();
+    </script>
     <style>
+        /* Base Light Theme Variables */
         :root {
             --primary: #4A90E2;
             --bg: #f8fbff;
             --card: #ffffff;
-            --text: #333;
+            --text: #333333;
+            --text-muted: #888888;
+            --border: #eeeeee;
+            --hover-bg: #f0f7ff;
+            --body-bg: #e0e7ff;
+            --sidebar-width: 280px;
         }
-        body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #e0e7ff; margin: 0; display: flex; justify-content: center; }
-        .mobile-container { width: 100%; max-width: 400px; height: 100vh; background: var(--bg); position: relative; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .header { padding: 20px; background: var(--card); text-align: center; border-bottom: 1px solid #eee; position: relative; }
-        .content { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 80px; transition: opacity 0.3s; }
+
+        /* Dark Theme Variables */
+        body.dark-theme {
+            --primary: #63a4ff;
+            --bg: #121212;
+            --card: #1e1e1e;
+            --text: #e0e0e0;
+            --text-muted: #aaaaaa;
+            --border: #333333;
+            --hover-bg: #2a2a2a;
+            --body-bg: #0a0a0a;
+        }
         
-        .nav-bar { position: absolute; bottom: 0; width: 100%; height: 70px; background: var(--card); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid #eee; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 12px; cursor: pointer; color: #888; }
+        body { 
+            font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background: var(--body-bg); 
+            color: var(--text);
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Base Mobile Layout */
+        .app-container { 
+            width: 100%; 
+            max-width: 100%; 
+            height: 100vh; 
+            background: var(--bg); 
+            position: relative; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            transition: all 0.3s ease;
+        }
+        
+        .header { 
+            padding: 20px; 
+            background: var(--card); 
+            text-align: center; 
+            border-bottom: 1px solid var(--border); 
+            position: relative; 
+            z-index: 10;
+        }
+        
+        .content { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 20px; 
+            padding-bottom: 90px; 
+            transition: opacity 0.3s; 
+        }
+        
+        .nav-bar { 
+            position: absolute; 
+            bottom: 0; 
+            width: 100%; 
+            height: 70px; 
+            background: var(--card); 
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center; 
+            border-top: 1px solid var(--border); 
+            z-index: 20;
+        }
+        
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 12px; cursor: pointer; color: var(--text-muted); transition: 0.2s; padding: 10px; border-radius: 8px; }
+        .nav-item:hover { background: var(--hover-bg); }
         .nav-item.active { color: var(--primary); font-weight: bold; }
         .nav-item span { margin-top: 4px; }
 
-        .task-card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid #f0f4f8; transition: transform 0.2s; }
-        .task-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .completed-text { text-decoration: line-through; opacity: 0.6; }
+        .task-card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--border); transition: transform 0.2s, box-shadow 0.2s; }
+        .task-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .completed-text { text-decoration: line-through; opacity: 0.5; }
         
         .fab { position: absolute; bottom: 90px; right: 20px; width: 56px; height: 56px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4); cursor: pointer; z-index: 10; transition: 0.2s; }
-        .fab:hover { transform: scale(1.1); background: #357ABD; }
+        .fab:hover { transform: scale(1.1); filter: brightness(1.1); }
 
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 3000; }
-        .modal-content { background: white; padding: 25px; border-radius: 20px; width: 80%; max-width: 320px; }
-        input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .modal-buttons { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-save { flex: 1; background: var(--primary); color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; }
-        .btn-cancel { flex: 1; background: #eee; border: none; padding: 10px; border-radius: 8px; cursor: pointer; }
-        .hidden { display: none !important; }
-        
-        .stat-item { background: #f0f7ff; padding: 20px; border-radius: 12px; text-align: center; }
-        .stat-number { font-size: 24px; font-weight: bold; display: block; color: #333; }
-        .stat-label { font-size: 12px; color: #666; }
-
-        .star-btn { cursor: pointer; transition: 0.3s; color: #ccc; font-size: 20px; }
-        .star-btn.is-starred { color: #FFD700; transform: scale(1.2) rotate(15deg); text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
-
-        .calendar-grid-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; color: #555; margin-bottom: 15px; font-size: 14px; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
-        .calendar-day { padding: 10px 0; font-size: 14px; cursor: pointer; border-radius: 8px; transition: 0.2s; }
-        .calendar-day:hover { background: #f0f7ff; }
-        .today-highlight { background: var(--primary); color: white; }
-        .has-task-dot::after { content: '•'; display: block; color: var(--primary); margin-top: -5px; }
-
-        .sidebar { position: absolute; left: -250px; top: 0; width: 250px; height: 100%; background: white; z-index: 2000; transition: 0.3s; box-sizing: border-box; }
-        .sidebar.active { left: 0; }
-        .sidebar-overlay { position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 1500; }
-        .sidebar-header { padding: 30px 20px; background: linear-gradient(135deg, #4A90E2, #63a4ff); color: white; }
-        .sidebar-items { padding: 10px; }
-        .sidebar-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 10px; }
-        .sidebar-item:hover { background: #f0f7ff; color: #4A90E2; }
-
-        .profile-card { background: var(--card); padding: 20px; border-radius: 15px; display: flex; align-items: center; gap: 15px; }
-        .avatar-large { width: 60px; height: 60px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: relative; }
-        .login-link { color: #4A90E2; cursor: pointer; font-size: 14px; }
-        .google-btn { width: 100%; padding: 12px; margin-top: 10px; background-color: white; color: #757575; border: 1px solid #dadce0; border-radius: 4px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; text-decoration: none; box-sizing: border-box; transition: all 0.3s ease; }
-        .google-btn:hover { background-color: #4A90E2; color: white; border-color: #4A90E2; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3); }
-
-        .help-btn { position: absolute; top: 15px; right: 15px; padding: 8px 16px; background: #FFD700; color: #333; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: none; transition: 0.3s; z-index: 100; animation: pulse 2s infinite; }
+        .help-btn { position: absolute; top: 18px; right: 20px; padding: 6px 14px; background: #FFD700; color: #333; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: none; transition: 0.3s; z-index: 15; animation: pulse 2s infinite; }
         .help-btn:hover { background: #ffcc00; transform: scale(1.05); }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 215, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); } }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 3000; }
+        .modal-content { background: var(--card); padding: 30px; border-radius: 20px; width: 85%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); color: var(--text); }
+        input, select, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; font-size: 14px; transition: 0.2s; background: var(--bg); color: var(--text); }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(74,144,226,0.2); }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-save { flex: 1; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-cancel { flex: 1; background: var(--border); color: var(--text); border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .hidden { display: none !important; }
+        
+        .stat-item { background: var(--hover-bg); padding: 20px; border-radius: 12px; text-align: center; flex: 1; }
+        .stat-number { font-size: 28px; font-weight: bold; display: block; color: var(--text); }
+        .stat-label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+
+        .star-btn { cursor: pointer; transition: 0.3s; color: var(--border); font-size: 20px; }
+        .star-btn.is-starred { color: #FFD700; transform: scale(1.2) rotate(15deg); text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+
+        .calendar-grid-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; color: var(--text-muted); margin-bottom: 15px; font-size: 14px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+        .calendar-day { padding: 12px 0; font-size: 14px; cursor: pointer; border-radius: 8px; transition: 0.2s; font-weight: 500; }
+        .calendar-day:hover { background: var(--hover-bg); color: var(--primary); }
+        .today-highlight { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(74,144,226,0.3); }
+        .has-task-dot::after { content: '•'; display: block; color: var(--primary); margin-top: -5px; font-size: 18px; }
+
+        .sidebar { position: absolute; left: calc(var(--sidebar-width) * -1); top: 0; width: var(--sidebar-width); height: 100%; background: var(--card); z-index: 2000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-sizing: border-box; box-shadow: 2px 0 15px rgba(0,0,0,0.2); }
+        .sidebar.active { left: 0; }
+        .sidebar-overlay { position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; z-index: 1500; backdrop-filter: blur(2px); }
+        .sidebar-header { padding: 30px 20px; background: linear-gradient(135deg, var(--primary), #63a4ff); color: white; }
+        .sidebar-items { padding: 15px 10px; }
+        .sidebar-item { padding: 15px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 12px; font-weight: 500; color: var(--text); }
+        .sidebar-item:hover { background: var(--hover-bg); color: var(--primary); padding-left: 20px; transition: 0.2s; }
+
+        .profile-card { background: var(--card); padding: 25px; border-radius: 15px; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .avatar-large { width: 70px; height: 70px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 3px solid var(--card); box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; }
+        .login-link { color: var(--primary); cursor: pointer; font-size: 14px; margin-top: 5px; font-weight: 500; }
+        .google-btn { width: 100%; padding: 12px; margin-top: 10px; background-color: var(--card); color: var(--text); border: 1px solid var(--border); border-radius: 8px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; text-decoration: none; box-sizing: border-box; transition: 0.2s; }
+        .google-btn:hover { background: var(--hover-bg); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: var(--primary); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* POMODORO WIDGET */
+        #pomodoro-widget {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            z-index: 2500;
+            width: 240px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            color: var(--text);
+            transition: opacity 0.3s, transform 0.3s;
         }
+        
+        .widget-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;}
+        .time-presets { display: flex; gap: 5px; }
+        .time-presets button { flex: 1; padding: 6px 0; font-size: 12px; font-weight: bold; background: var(--bg); border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .time-presets button:hover { background: var(--hover-bg); color: var(--primary); }
+        .time-presets button.active-preset { background: var(--primary); color: white; border-color: var(--primary); }
 
-        input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: #4A90E2; }
+        #timer-display { font-size: 42px; font-weight: bold; text-align: center; color: var(--primary); font-family: monospace; background: var(--hover-bg); border-radius: 10px; padding: 10px 0; letter-spacing: 2px; }
+        
+        .widget-controls { display: flex; gap: 8px; }
+        .widget-controls button { flex: 1; padding: 8px; background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .widget-controls button:hover { background: var(--primary); color: white; border-color: var(--primary); }
 
+        /* Desktop/Tablet Upgrade */
+        @media (min-width: 768px) {
+            .app-container { max-width: 1000px; height: 90vh; border-radius: 20px; display: grid; grid-template-columns: 100px 1fr; grid-template-rows: auto 1fr; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+            .header { grid-column: 2; grid-row: 1; border-radius: 0 20px 0 0; padding: 25px; }
+            .content { grid-column: 2; grid-row: 2; padding: 30px 50px; padding-bottom: 40px; border-radius: 0 0 20px 0; }
+            .nav-bar { grid-column: 1; grid-row: 1 / span 2; position: static; height: 100%; flex-direction: column; justify-content: center; gap: 40px; border-top: none; border-right: 1px solid var(--border); border-radius: 20px 0 0 20px; }
+            .nav-item { padding: 15px; }
+            .nav-item span { font-size: 13px; margin-top: 8px; }
+            .fab { bottom: 40px; right: 50px; width: 65px; height: 65px; font-size: 30px; }
+            #calendar-view, #mine-view { max-width: 700px; margin: 0 auto; }
+            #tasks-view { max-width: 800px; margin: 0 auto; }
+            .task-card { padding: 20px; }
+            #pomodoro-widget { bottom: 40px; left: 140px; } 
+            .help-btn { top: 25px; right: 25px; }
+        }
     </style>
 </head>
 <body>
 
-<div class="mobile-container">
+<div class="app-container">
     <div class="header">
-        <div style="position: absolute; left: 20px; font-size: 24px; cursor: pointer; top: 20px;" onclick="toggleSidebar()">☰</div>
-        <h2 id="view-title" style="margin:0;">My Tasks</h2>
+        <div style="position: absolute; left: 25px; font-size: 26px; cursor: pointer; top: 20px; color: var(--text); transition: 0.2s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text)'" onclick="toggleSidebar()">☰</div>
+        <h2 id="view-title" style="margin:0; color: var(--text);">My Tasks</h2>
+        
+        <div class="help-btn" onclick="toggleUserGuide()" title="User Guide">?</div>
     </div>
 
     <div class="content">
@@ -96,8 +222,8 @@
                 <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
             </div>
             <div id="calendar-days" class="calendar-grid"></div>
-            <div id="day-tasks-container" style="margin-top: 30px;">
-                <h4 id="selected-date-label" style="color: #4A90E2; border-bottom: 2px solid #f0f4f8; padding-bottom: 5px;">Today's Focus</h4>
+            <div id="day-tasks-container" style="margin-top: 40px;">
+                <h4 id="selected-date-label" style="color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 10px; font-size: 18px;">Today's Focus</h4>
                 <div id="day-task-list"></div>
             </div>
         </div>
@@ -105,19 +231,19 @@
         <div id="mine-view" class="hidden">
             <div class="profile-card">
                 <div class="avatar-large" onclick="triggerAvatarUpload()" style="cursor: pointer;">
-                    <span id="current-avatar-display" style="font-size: 30px;">👤</span>
-                    <div style="position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.5); color: white; font-size: 10px; text-align: center; padding: 2px;">EDIT</div>
+                    <span id="current-avatar-display" style="font-size: 35px;">👤</span>
+                    <div style="position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.6); color: white; font-size: 11px; text-align: center; padding: 4px 0; font-weight: bold;">EDIT</div>
                 </div>
                 <input type="file" id="avatar-upload" hidden accept="image/*" onchange="handleAvatarChange(this)">
                 <div>
-                    <div id="user-status-text" style="font-weight: bold; font-size: 16px;">Welcome!</div>
+                    <div id="user-status-text" style="font-weight: bold; font-size: 20px; color: var(--text);">Welcome!</div>
                     <div class="login-link" id="login-link-btn" onclick="openLoginModal()">Click to login</div>
                 </div>
             </div>
 
-            <h4 style="margin: 20px 0 10px 0; color: #555;">Tasks Overview</h4>
+            <h4 style="margin: 30px 0 15px 0; color: var(--text-muted); font-size: 18px;">Tasks Overview</h4>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+            <div style="display: flex; gap: 15px; margin-bottom: 25px;">
                 <div class="stat-item">
                     <span id="count-comp" class="stat-number">0</span>
                     <span class="stat-label">Completed</span>
@@ -128,30 +254,30 @@
                 </div>
             </div>
 
-            <div class="stat-item" style="display: flex; flex-direction: column; align-items: center; padding: 25px; margin-bottom: 20px;">
+            <div class="stat-item" style="display: flex; flex-direction: column; align-items: center; padding: 35px; margin-bottom: 25px;">
                 <div style="position: relative; display: flex; align-items: center; justify-content: center;">
-                    <svg width="100" height="100" style="transform: rotate(-90deg);">
-                        <circle cx="50" cy="50" r="40" stroke="#eee" stroke-width="8" fill="transparent"/>
-                        <circle id="progress-circle" cx="50" cy="50" r="40" stroke="#4A90E2" stroke-width="8"
-                            fill="transparent" stroke-dasharray="251.2" stroke-dashoffset="251.2"
-                            stroke-linecap="round" style="transition: stroke-dashoffset 0.5s ease;"/>
+                    <svg width="120" height="120" style="transform: rotate(-90deg);">
+                        <circle cx="60" cy="60" r="50" stroke="var(--border)" stroke-width="10" fill="transparent"/>
+                        <circle id="progress-circle" cx="60" cy="60" r="50" stroke="var(--primary)" stroke-width="10"
+                            fill="transparent" stroke-dasharray="314.16" stroke-dashoffset="314.16"
+                            stroke-linecap="round" style="transition: stroke-dashoffset 0.8s ease-out;"/>
                     </svg>
-                    <div id="perc-text" style="position: absolute; font-size: 18px; font-weight: bold; color: #4A90E2;">0%</div>
+                    <div id="perc-text" style="position: absolute; font-size: 22px; font-weight: bold; color: var(--primary);">0%</div>
                 </div>
-                <span class="stat-label" style="margin-top: 10px;">Total Completion Rate</span>
+                <span class="stat-label" style="margin-top: 15px; font-size: 14px;">Total Completion Rate</span>
             </div>
 
-            <h4 style="margin: 20px 0 10px 0; color: #555;">Completion of Daily Tasks</h4>
-            <div style="background: #f0f7ff; padding: 20px; border-radius: 12px; height: 100px; display: flex; align-items: flex-end; justify-content: space-around; gap: 5px;">
-                <div style="width:15px;height:20%;background:#4A90E2;border-radius:3px;"></div>
-                <div style="width:15px;height:45%;background:#4A90E2;border-radius:3px;"></div>
-                <div style="width:15px;height:10%;background:#4A90E2;border-radius:3px;"></div>
-                <div style="width:15px;height:80%;background:#4A90E2;border-radius:3px;"></div>
-                <div style="width:15px;height:35%;background:#4A90E2;border-radius:3px;"></div>
-                <div style="width:15px;height:60%;background:#4A90E2;border-radius:3px;"></div>
-                <div style="width:15px;height:15%;background:#4A90E2;border-radius:3px;"></div>
+            <h4 style="margin: 30px 0 15px 0; color: var(--text-muted); font-size: 18px;">Weekly Activity</h4>
+            <div style="background: var(--hover-bg); padding: 25px; border-radius: 12px; height: 120px; display: flex; align-items: flex-end; justify-content: space-around; gap: 8px;">
+                <div style="width:18px;height:20%;background:var(--primary);border-radius:4px; transition: height 0.5s;"></div>
+                <div style="width:18px;height:45%;background:var(--primary);border-radius:4px; transition: height 0.5s;"></div>
+                <div style="width:18px;height:10%;background:var(--primary);border-radius:4px; transition: height 0.5s;"></div>
+                <div style="width:18px;height:80%;background:var(--primary);border-radius:4px; transition: height 0.5s;"></div>
+                <div style="width:18px;height:35%;background:var(--primary);border-radius:4px; transition: height 0.5s;"></div>
+                <div style="width:18px;height:60%;background:var(--primary);border-radius:4px; transition: height 0.5s;"></div>
+                <div style="width:18px;height:15%;background:var(--primary);border-radius:4px; transition: height 0.5s;"></div>
             </div>
-            <div style="display: flex; justify-content: space-around; padding: 5px 0; font-size: 10px; color: #888;">
+            <div style="display: flex; justify-content: space-around; padding: 10px 0; font-size: 12px; font-weight: bold; color: var(--text-muted);">
                 <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
             </div>
         </div>
@@ -161,24 +287,49 @@
     <div class="fab" onclick="openModal()">+</div>
 
     <div class="nav-bar">
-        <div class="nav-item active" onclick="switchTab('tasks', 'My Tasks', this)">📋<span>Tasks</span></div>
-        <div class="nav-item" onclick="switchTab('calendar', 'February 2026', this)">📅<span>Calendar</span></div>
-        <div class="nav-item" onclick="switchTab('mine', 'Profile', this)">👤<span>Mine</span></div>
+        <div class="nav-item active" onclick="switchTab('tasks', 'My Tasks', this)">
+            <span style="font-size: 20px; margin-bottom: 2px;">📋</span><span>Tasks</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('calendar', 'Schedule', this)">
+            <span style="font-size: 20px; margin-bottom: 2px;">📅</span><span>Calendar</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('mine', 'Profile', this)">
+            <span style="font-size: 20px; margin-bottom: 2px;">👤</span><span>Mine</span>
+        </div>
+    </div>
+</div>
+
+<div id="pomodoro-widget" class="hidden">
+    <div class="widget-header">
+        <span style="font-size: 14px; font-weight: bold;">🍅 Focus Timer</span>
+        <span style="cursor: pointer; font-size: 18px; color: var(--text-muted);" onclick="toggleWidget()">✕</span>
+    </div>
+    <div class="time-presets">
+        <button onclick="setTimerDuration(5, this)">5m</button>
+        <button onclick="setTimerDuration(15, this)">15m</button>
+        <button onclick="setTimerDuration(25, this)" class="active-preset">25m</button>
+        <button onclick="setTimerDuration(50, this)">50m</button>
+    </div>
+    <div id="timer-display">25:00</div>
+    <div class="widget-controls">
+        <button onclick="startTimer()">Start</button>
+        <button onclick="pauseTimer()">Pause</button>
+        <button onclick="resetTimer()">Reset</button>
     </div>
 </div>
 
 <div id="taskModal" class="modal">
     <div class="modal-content">
-        <h3>New Task</h3>
+        <h3 style="margin-top:0; color: var(--text);">New Task</h3>
         <input type="text" id="new_task_name" placeholder="What needs to be done?">
-        <label><small>Category</small></label>
+        <label style="display:block; margin-top: 10px; color: var(--text-muted);"><small>Category</small></label>
         <select id="new_task_category">
             <option value="Personal">Personal</option>
             <option value="Work">Work</option>
             <option value="Wishlist">Wishlist</option>
             <option value="Birthday">Birthday</option>
         </select>
-        <label><small>Due Date</small></label>
+        <label style="display:block; margin-top: 10px; color: var(--text-muted);"><small>Due Date</small></label>
         <input type="date" id="new_task_date">
         <div class="modal-buttons">
             <button class="btn-cancel" onclick="closeModal()">Cancel</button>
@@ -189,7 +340,7 @@
 
 <div id="loginModal" class="modal">
     <div class="modal-content">
-        <h3 style="text-align: center; color: #4A90E2;">Account Sync</h3>
+        <h3 style="text-align: center; color: var(--primary);">Account Sync</h3>
         <a href="/auth/google" class="google-btn">
             <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google" style="width:18px;height:18px;">
             Sign in with Google
@@ -198,47 +349,117 @@
     </div>
 </div>
 
-<div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
-<div id="sidebar-menu" class="sidebar">
-    <div class="sidebar-header">
-        <h3 style="margin:0">To-Do List</h3>
-        <small>v1.0</small>
-    </div>
-    <div class="sidebar-items">
-        <div class="sidebar-item" onclick="loadStarredOnly()"><span style="width:25px">⭐</span> Starred Tasks</div>
-        <div class="sidebar-item" onclick="filterByCategory()"><span style="width:25px">📁</span> Category</div>
-        <div class="sidebar-item" onclick="openFeedbackModal()"><span style="width:25px">📝</span> Feedback</div>
-        <div class="sidebar-item" onclick="toggleDarkMode()"><span style="width:25px">🎨</span> Theme (Dark Mode)</div>
-        <div class="sidebar-item" onclick="alert('Widgets coming in v2.0!')"><span style="width:25px">🧩</span> Widget</div>
-    </div>
-</div>
-
-<div class="help-btn" onclick="toggleUserGuide()" title="User Guide">?</div>
-
 <div id="guideModal" class="modal">
     <div class="modal-content">
-        <h3 style="color: var(--primary);">Quick User Guide</h3>
-        <ul style="text-align: left; font-size: 14px; line-height: 1.6;">
+        <h3 style="color: var(--primary); margin-top: 0;">Quick User Guide</h3>
+        <ul style="text-align: left; font-size: 14px; line-height: 1.6; padding-left: 20px; color: var(--text);">
             <li><strong>Add Tasks:</strong> Click the <b>+</b> button to create a new task.</li>
             <li><strong>Prioritize:</strong> Use the ⭐ icon to mark important tasks.</li>
             <li><strong>Sync:</strong> Use the 👤 <b>Mine</b> tab to log in with Google for cloud sync.</li>
             <li><strong>Calendar:</strong> Tap 📅 to view deadlines for February 2026.</li>
+            <li><strong>Focus Timer:</strong> Use 🍅 in sidebar to start a Pomodoro session.</li>
         </ul>
-        <button class="btn-save" onclick="toggleUserGuide()">Got it!</button>
+        <button class="btn-save" style="width: 100%; margin-top: 10px;" onclick="toggleUserGuide()">Got it!</button>
     </div>
 </div>
 
+<div id="feedbackModal" class="modal">
+    <div class="modal-content">
+        <h3 style="color: var(--primary); text-align: center; margin-top: 0;">Send Feedback</h3>
+        <p style="font-size: 12px; color: var(--text-muted); text-align: center;">How can we improve your experience?</p>
+        <textarea id="feedbackText" rows="4" placeholder="Your suggestions..."></textarea>
+        <div class="modal-buttons">
+            <button class="btn-cancel" onclick="closeFeedbackModal()">Cancel</button>
+            <button class="btn-save" onclick="submitFeedback()">Send</button>
+        </div>
+    </div>
+</div>
 
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+<div id="sidebar-menu" class="sidebar">
+    <div class="sidebar-header">
+        <h3 style="margin:0; font-size: 22px;">To-Do List</h3>
+        <small style="opacity: 0.8;">v1.0</small>
+    </div>
+    <div class="sidebar-items">
+        <div class="sidebar-item" onclick="loadStarredOnly()"><span style="width:30px; font-size:18px;">⭐</span> Starred Tasks</div>
+        <div class="sidebar-item" onclick="filterByCategory()"><span style="width:30px; font-size:18px;">📁</span> Category</div>
+        <div class="sidebar-item" onclick="openFeedbackModal()"><span style="width:30px; font-size:18px;">📝</span> Feedback</div>
+        <div class="sidebar-item" onclick="toggleDarkMode()"><span style="width:30px; font-size:18px;">🎨</span> Dark Mode</div>
+        <div class="sidebar-item" onclick="toggleWidget()"><span style="width:30px; font-size:18px;">🍅</span> Focus Timer</div>
+    </div>
+</div>
 
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script> 
 <script>
-    (function() {
-        emailjs.init("VlJaZ1nveYq7yEHV3"); 
-    })();
-
     const API_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000' 
     : 'https://daily-routine-production.up.railway.app';
+
+    // POMODORO TIMER
+    let timerInterval;
+    let currentDuration = 25 * 60;
+    let timeLeft = currentDuration;
+
+    function toggleWidget() {
+        const widget = document.getElementById('pomodoro-widget');
+        widget.classList.toggle('hidden');
+        const sidebar = document.getElementById('sidebar-menu');
+        if(sidebar.classList.contains('active')) toggleSidebar();
+    }
+
+    function setTimerDuration(minutes, btnElement) {
+        if (timerInterval) pauseTimer(); 
+        currentDuration = minutes * 60;
+        timeLeft = currentDuration;
+        updateTimerDisplay();
+        document.querySelectorAll('.time-presets button').forEach(b => b.classList.remove('active-preset'));
+        if(btnElement) btnElement.classList.add('active-preset');
+    }
+
+    function updateTimerDisplay() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        document.getElementById('timer-display').innerText = 
+            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+        if (timerInterval) return; 
+        timerInterval = setInterval(() => {
+            if (timeLeft > 0) {
+                timeLeft--;
+                updateTimerDisplay();
+            } else {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                alert("Time's up! Great job staying focused.");
+                resetTimer();
+            }
+        }, 1000);
+    }
+
+    function pauseTimer() {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+
+    function resetTimer() {
+        pauseTimer();
+        timeLeft = currentDuration;
+        updateTimerDisplay();
+    }
+
+    // DARK MODE
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.classList.add('dark-theme');
+    }
+
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-theme');
+        const isDark = document.body.classList.contains('dark-theme');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        toggleSidebar(); 
+    }
 
     function openModal() {
         document.getElementById('taskModal').style.display = 'flex';
@@ -255,11 +476,15 @@
         document.getElementById('loginModal').style.display = 'none';
     }
 
+    function toggleUserGuide() {
+        const modal = document.getElementById('guideModal');
+        modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+    }
+
     function openFeedbackModal() {
         toggleSidebar();
         document.getElementById('feedbackModal').style.display = 'flex';
     }
-
     function closeFeedbackModal() {
         document.getElementById('feedbackModal').style.display = 'none';
         document.getElementById('feedbackText').value = '';
@@ -270,7 +495,6 @@
         if (!feedback) return alert("Please enter your feedback.");
 
         const user = localStorage.getItem('currentUser') || 'Guest User';
-
         const sendBtn = document.querySelector('#feedbackModal .btn-save');
         sendBtn.innerText = "Sending...";
         sendBtn.disabled = true;
@@ -281,7 +505,6 @@
                 message: feedback,
                 reply_to: "no-reply@dailyroutine.com"
             });
-
             alert("Success! Feedback sent to my Gmail.");
             closeFeedbackModal();
         } catch (error) {
@@ -320,11 +543,6 @@
         overlay.style.display = sidebar.classList.contains('active') ? 'block' : 'none';
     }
 
-    function toggleDarkMode() {
-        alert('Dark mode feature is under maintenance');
-        toggleSidebar();
-    }
-
     function triggerAvatarUpload() {
         document.getElementById('avatar-upload').click();
     }
@@ -344,17 +562,15 @@
     }
     function updateAvatarDisplay(imageData) {
         const display = document.getElementById('current-avatar-display');
-        display.innerHTML = `<img src="${imageData}" style="width:60px;height:60px;object-fit:cover;border-radius:50%;">`;
+        display.innerHTML = `<img src="${imageData}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
     }
-
-    // handle log in na di gin delete ko
 
     function renderTasksList(tasks) {
         const container = document.getElementById('taskList');
         if (tasks.length === 0) {
-            container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#aaa;">
-                <div style="font-size:50px;">📋</div>
-                <p>No tasks yet. Click + to add one!</p>
+            container.innerHTML = `<div style="text-align:center;padding:80px 20px;color:var(--text-muted);">
+                <div style="font-size:60px; margin-bottom: 15px;">📋</div>
+                <p style="font-size: 16px;">No tasks yet. Click + to add one!</p>
             </div>`;
             return;
         }
@@ -365,12 +581,12 @@
             container.innerHTML += `
                 <div class="task-card" data-id="${task.id}">
                     <input type="checkbox" ${task.isCompleted ? 'checked' : ''} onchange="toggleTask(${task.id}, this)">
-                    <div class="${isDone}" style="flex:1">
-                        <strong>${task.task_name}</strong><br>
-                        <small style="color:#888">🏷️ ${task.category} | 📅 ${task.date || 'No Date'}</small>
+                    <div class="${isDone}" style="flex:1; padding-left: 5px;">
+                        <strong style="font-size: 16px; color: var(--text);">${task.task_name}</strong><br>
+                        <small style="color:var(--text-muted); display: inline-block; margin-top: 5px;">🏷️ ${task.category} &nbsp;|&nbsp; 📅 ${task.date || 'No Date'}</small>
                     </div>
                     <span onclick="toggleStar(${task.id})" class="star-btn ${starredClass}">⭐</span>
-                    <span onclick="deleteTask(${task.id})" style="color:#ff4d4d;cursor:pointer;font-weight:bold;padding:5px;">✕</span>
+                    <span onclick="deleteTask(${task.id})" style="color:#ff4d4d;cursor:pointer;font-weight:bold;padding:10px; font-size: 18px;">✕</span>
                 </div>`;
         });
     }
@@ -383,8 +599,8 @@
             renderTasksList(await res.json());
         } catch (e) {
             document.getElementById('taskList').innerHTML = `
-                <div style="text-align:center;padding:40px;color:#aaa;">
-                    <div style="font-size:40px;">⚠️</div>
+                <div style="text-align:center;padding:80px 20px;color:var(--text-muted);">
+                    <div style="font-size:50px; margin-bottom: 15px;">⚠️</div>
                     <p>Could not connect to server.</p>
                 </div>`;
         }
@@ -493,7 +709,7 @@
             animateNumber('perc-text', percentage, '%');
 
             const circle = document.getElementById('progress-circle');
-            if (circle) circle.style.strokeDashoffset = 251.2 - (percentage / 100) * 251.2;
+            if (circle) circle.style.strokeDashoffset = 314.16 - (percentage / 100) * 314.16;
         } catch (e) {
             console.error("Stats update failed:", e);
         }
@@ -542,24 +758,16 @@
         label.innerText = `Tasks for ${dateStr}`;
         const filtered = allTasks.filter(t => t.date === dateStr);
         if (filtered.length === 0) {
-            list.innerHTML = `<p style="color:#999;font-size:0.9em;">No tasks for this day.</p>`;
+            list.innerHTML = `<p style="color:var(--text-muted);font-size:0.9em; padding: 10px 0;">No tasks for this day. Enjoy your free time!</p>`;
             return;
         }
         filtered.forEach(t => {
             list.innerHTML += `
-                <div style="background:#f9f9f9;padding:10px;border-radius:10px;margin-bottom:5px;border-left:4px solid #4A90E2">
-                    <strong>${t.task_name}</strong> <small style="color:#888">(${t.category})</small>
+                <div style="background:var(--hover-bg);padding:15px;border-radius:10px;margin-bottom:8px;border-left:4px solid var(--primary); display: flex; justify-content: space-between; align-items: center;">
+                    <strong style="font-size: 15px; color: var(--text);">${t.task_name}</strong>
+                    <small style="background:var(--card); color:var(--primary); border: 1px solid var(--border); padding: 4px 8px; border-radius: 12px; font-weight: bold;">${t.category}</small>
                 </div>`;
         });
-    }
-
-    function toggleUserGuide() {
-        const modal = document.getElementById('guideModal');
-        if (modal.style.display === 'flex') {
-            modal.style.display = 'none';
-        } else {
-            modal.style.display = 'flex';
-        }
     }
 
     window.onload = () => {
@@ -595,24 +803,7 @@
         generateCalendar();
         updateStats();
     };
-
 </script>
-
-<div id="feedbackModal" class="modal">
-    <div class="modal-content">
-        <h3 style="color: var(--primary); text-align: center;">Send Feedback</h3>
-        <p style="font-size: 12px; color: #666; text-align: center;">How can we improve your experience?</p>
-        
-        <textarea id="feedbackText" rows="4" 
-            style="width: 100%; border-radius: 8px; border: 1px solid #ddd; padding: 10px; font-family: inherit; box-sizing: border-box;" 
-            placeholder="Your suggestions..."></textarea>
-            
-        <div class="modal-buttons">
-            <button class="btn-cancel" onclick="closeFeedbackModal()">Cancel</button>
-            <button class="btn-save" onclick="submitFeedback()">Send</button>
-        </div>
-    </div>
-</div>
 
 </body>
 </html>
