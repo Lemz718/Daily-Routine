@@ -11,7 +11,6 @@
         })();
     </script>
     <style>
-        /* Base Light Theme Variables */
         :root {
             --primary: #4A90E2;
             --bg: #f8fbff;
@@ -24,7 +23,6 @@
             --sidebar-width: 280px;
         }
 
-        /* Dark Theme Variables */
         body.dark-theme {
             --primary: #63a4ff;
             --bg: #121212;
@@ -48,7 +46,6 @@
             transition: background 0.3s, color 0.3s;
         }
 
-        /* Base Mobile Layout */
         .app-container { 
             width: 100%; 
             max-width: 100%; 
@@ -378,7 +375,7 @@
 <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
 <div id="sidebar-menu" class="sidebar">
     <div class="sidebar-header">
-        <h3 style="margin:0; font-size: 22px;">To-Do List</h3>
+        <h3 style="margin:0; font-size: 22px;">Daily-Routine</h3>
         <small style="opacity: 0.8;">v1.0</small>
     </div>
     <div class="sidebar-items">
@@ -395,7 +392,6 @@
     ? 'http://localhost:3000' 
     : 'https://daily-routine-production.up.railway.app';
 
-    // POMODORO TIMER
     let timerInterval;
     let currentDuration = 25 * 60;
     let timeLeft = currentDuration;
@@ -449,7 +445,6 @@
         updateTimerDisplay();
     }
 
-    // DARK MODE
     if (localStorage.getItem('theme') === 'dark') {
         document.body.classList.add('dark-theme');
     }
